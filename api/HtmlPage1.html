@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <script src="jquery-1.8.3.min.js"></script>
+    <script>
+        $(function () {
+
+            $("#btnName").click(function () {
+
+            })
+
+            $("#btn").click(function () {
+                var _clientId = $("#clientId").val();
+                var _clientSecret = $("#clientSecret").val();
+                console.log('_clientId=' + _clientId + ',_clientSecret=' + _clientSecret);
+                $.ajax({
+                    url: "/Token",
+                    type: "post",
+                    data: { "grant_type": "password", "username": "admin", "password": "123456" },
+                    dataType: "json",
+                    headers: {
+                        "Authorization": "Basic " + Base64_Encode(_clientId + ":" + _clientSecret)
+                    },
+                    success: function (data) {
+                        console.log(data);
+                        var accessToken = data.access_token;
+                        //GetValues(accessToken);
+                        console.log('accessToken=' + accessToken);
+                        console.log('start data');
+                        GetValues(accessToken);
+                    },
+                    error: function (data) {
+                        console.log(data);
+                    }
+                });
+
+            })
+        })
+        function GetValues(accessToken) {
+            var html = "Token:" + accessToken + "<br/><br/>";
+            $.ajax({
+                url: "/api/Products",
+                type: "get",
+                dataType: "json",
+                headers: {
+                    "Authorization": "Bearer " + accessToken
+                },
+                success: function (values) {
+                    for (var i = 0; i < values.length; i++) {
+                        html += "values[" + i + "] :" + values[i] + "<br/>";
+                    }
+                    // $("#clientResult").html(html);
+                    console.log(html);
+                    GetCurrentUserName(accessToken);
+                }
+            });
+        }
+
+
+        function GetCurrentUserName(accessToken) {
+            var html = "Token:" + accessToken + "<br/><br/>";
+            $.ajax({
+                url: "/api/User",
+                type: "get",
+                dataType: "text",
+                headers: {
+                    "Authorization": "Bearer " + accessToken
+                },
+                success: function (userName) {
+                    //html += "CurrentUserName:" + userName + "<br/>";
+                    //$("#resourceOwnerresult").html(html);
+                    console.log('userName=' + userName);
+                }
+            });
+        }
+
+        function Base64_Encode(str) {
+            var c1, c2, c3;
+            var base64EncodeChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+            var i = 0, len = str.length, string = '';
+
+            while (i < len) {
+                c1 = str.charCodeAt(i++) & 0xff;
+                if (i === len) {
+                    string += base64EncodeChars.charAt(c1 >> 2);
+                    string += base64EncodeChars.charAt((c1 & 0x3) << 4);
+                    string += "==";
+                    break;
+                }
+                c2 = str.charCodeAt(i++);
+                if (i === len) {
+                    string += base64EncodeChars.charAt(c1 >> 2);
+                    string += base64EncodeChars.charAt(((c1 & 0x3) << 4) | ((c2 & 0xF0) >> 4));
+                    string += base64EncodeChars.charAt((c2 & 0xF) << 2);
+                    string += "=";
+                    break;
+                }
+                c3 = str.charCodeAt(i++);
+                string += base64EncodeChars.charAt(c1 >> 2);
+                string += base64EncodeChars.charAt(((c1 & 0x3) << 4) | ((c2 & 0xF0) >> 4));
+                string += base64EncodeChars.charAt(((c2 & 0xF) << 2) | ((c3 & 0xC0) >> 6));
+                string += base64EncodeChars.charAt(c3 & 0x3F);
+            }
+            return string;
+        }
+    </script>
+</head>
+<body>
+    <input type="button" id="btn" name="name" value="获取" />
+    <input type="text" value="Mobile" id="clientId" />
+    <input type="text" value="XiaoMi" id="clientSecret" />
+    <input type="button" id="btnName" value="获取用户名" />
+    <span id="name"></span>
+</body>
+</html>
